@@ -35,7 +35,7 @@ module.exports = Plugin => class DemoPlugin extends Plugin {
 			if (!creator) return this.client.log.warn(`Can't create text transcript for ticket #${ticket.number} due to missing creator`);
 
 			const lines = [];
-			lines.push(`Ticket ${ticket.number}, created by ${this.client.cryptr.decrypt(creator.username)}#${creator.discriminator}, ${ticket.createdAt}\n`);
+			lines.push(`Ticket ${ticket.number}, created by ${creator.username)}#${creator.discriminator}, ${ticket.createdAt}\n`);
 
 			let closer;
 
@@ -48,7 +48,7 @@ module.exports = Plugin => class DemoPlugin extends Plugin {
 				});
 			}
 
-			if (closer) lines.push(`Closed by ${this.client.cryptr.decrypt(closer.username)}#${closer.discriminator}, ${ticket.updatedAt}\n`);
+			if (closer) lines.push(`Closed by ${closer.username}#${closer.discriminator}, ${ticket.updatedAt}\n`);
 
 			const messages = await this.client.db.models.Message.findAll({ where: { ticket: id } });
 
@@ -63,9 +63,9 @@ module.exports = Plugin => class DemoPlugin extends Plugin {
 				if (!user) continue;
 
 				const timestamp = dtf.fill('YYYY-MM-DD HH:mm:ss', new Date(ticket.createdAt), true);
-				const username = this.client.cryptr.decrypt(user.username);
-				const display_name = this.client.cryptr.decrypt(user.display_name);
-				const data = JSON.parse(this.client.cryptr.decrypt(message.data));
+				const username = user.username;
+				const display_name = user.display_name;
+				const data = JSON.parse(message.data);
 				let content = data.content ? data.content.replace(/\n/g, '\n\t') : '';
 				data.attachments?.forEach(a => {
 					content += '\n\t' + a.url;
@@ -78,7 +78,7 @@ module.exports = Plugin => class DemoPlugin extends Plugin {
 
 
 			const channel_name = category.name_format
-				.replace(/{+\s?(user)?name\s?}+/gi, this.client.cryptr.decrypt(creator.display_name))
+				.replace(/{+\s?(user)?name\s?}+/gi, creator.display_name)
 				.replace(/{+\s?num(ber)?\s?}+/gi, ticket.number);
 
 			const attachment = new MessageAttachment(Buffer.from(lines.join('\n')), channel_name + '.txt');
@@ -94,8 +94,8 @@ module.exports = Plugin => class DemoPlugin extends Plugin {
 						.setFooter(guild.footer, g.iconURL());
 
 					if (closer) embed.addField('Closed by', `<@${ticket.closed_by}>`);
-					if (ticket.topic) embed.addField('Topic', `\`${this.client.cryptr.decrypt(ticket.topic)}\``);
-					if (ticket.closed_reason) embed.addField('Closed reason', `\`${this.client.cryptr.decrypt(ticket.closed_reason)}\``);
+					if (ticket.topic) embed.addField('Topic', `\`${ticket.topic}\``);
+					if (ticket.closed_reason) embed.addField('Closed reason', `\`${ticket.closed_reason}\``);
 
 					const log_channel = await this.client.channels.fetch(this.config.channels[guild.id]);
 					await log_channel.send({
